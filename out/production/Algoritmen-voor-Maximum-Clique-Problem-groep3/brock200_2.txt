@@ -10,8 +10,8 @@ c Seed:20, Edge Density:  0.50000
 c Depth 1 Hiding
 c
 c Clique Elements are:
-c 26 120 119 157 69 182 47 148 104 134 
-c 54 144 
+c 26 120 119 157 69 182 47 148 104 134
+c 54 144
 c
 c Estimated Size of Uncompressed File:   0.1MB
 c
