@@ -14,7 +14,7 @@ public class DownloadBenchmark {
             }
         } catch (IOException e) {
             // handles IO exceptions
-            // hey
+            // hello
         }
     }
 }
