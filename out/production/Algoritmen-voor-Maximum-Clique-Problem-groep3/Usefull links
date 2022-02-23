@@ -1,0 +1,8 @@
+graphlib documentation:
+https://algoritmen-en-datastructuren-ugent.github.io/graphlib/javadoc/
+
+add graphlib library: (so you can work with the graph class from dodona)
+-> File -> Project Structure -> Libraries -> + -> Java -> select the jar file from dodona
+
+github:
+https://github.com/fldbock/Algoritmen-voor-Maximum-Clique-Problem-groep3
