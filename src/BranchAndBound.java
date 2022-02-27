@@ -5,17 +5,14 @@ import java.util.*;
 // Het algoritme valt het best te snappen door het voorbeeld op pagina 2 van de Branch and Bound paper te volgen.
 
 public class BranchAndBound {
-    // BestClique zal uiteindelijk de lijst weergeven van een maximum kliek in de graaf.
-    private static List<Node> BestClique = new ArrayList<>();
-
     // Het algoritme werkt adhv de parameter diepte. Diepte 1 is wanneer we 1 top bekijken, diepte 2 is wanneer we de adjacente toppen bekijken,
     // diepte 3 is wanneer we de adjacente toppen van een adjacente top bekijken, die bovendien ook nog steeds adjacent zijn met de eerste top enzoverder.
     // Zo wordt een kliek opgebouwd.
-    public static void bAndB(UndirectedGraph G, List<Node> toppen, int diepte, List<Node> CBC){
+    public static void bAndB(UndirectedGraph G, List<Node> toppen, int diepte, List<Node> CBC, List<Node> best){
         int m = 0;
 
         if(!toppen.isEmpty()){
-            while(m < toppen.size()-1 && diepte + toppen.size()-1-m > BestClique.size()){
+            while(m < toppen.size()-1 && diepte + toppen.size()-1-m > best.size()){
                 // Door een nieuwe lijst van adjacente toppen uit de huidige lijst te maken, gaan we een niveau dieper. Met deze lijst voeren we
                 // het algoritme opnieuw uit.
                 List<Node> toppenNieuw = new ArrayList<>();
@@ -25,28 +22,31 @@ public class BranchAndBound {
                     }
                 }
                 CBC.add(toppen.get(m));
-                bAndB(G, toppenNieuw, diepte+1, CBC);
+                bAndB(G, toppenNieuw, diepte+1, CBC, best);
                 CBC.remove(toppen.get(m));
                 m++;
             }
             // Als we op het einde van een lijst zitten, kunnen we niet meer verder en hebben we een maximale kliek gevonden.
             if(m == toppen.size()-1){
                 CBC.add(toppen.get(m));
-                if(CBC.size()> BestClique.size()) {
-                    BestClique = CBC;
+                if(CBC.size()> best.size()) {
+                    best.clear();
+                    best.addAll(CBC);
                 }
                 CBC.remove(toppen.get(m));
             }
-        } else if(CBC.size()> BestClique.size()) {
-            BestClique = CBC;
+        } else if(CBC.size()> best.size()) {
+            best.clear();
+            best.addAll(CBC);
         }
 
     }
 
     public static List<Node> maximumKliek(UndirectedGraph G){
         List<Node> CBC = new ArrayList<>();
-        bAndB(G, G.getAllNodes(), 1, CBC);
-        return BestClique;
+        List<Node> best = new ArrayList<>();
+        bAndB(G, G.getAllNodes(), 1, CBC, best);
+        return best;
 
     }
 
