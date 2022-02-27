@@ -8,45 +8,41 @@ public class BranchAndBound {
     // Het algoritme werkt adhv de parameter diepte. Diepte 1 is wanneer we 1 top bekijken, diepte 2 is wanneer we de adjacente toppen bekijken,
     // diepte 3 is wanneer we de adjacente toppen van een adjacente top bekijken, die bovendien ook nog steeds adjacent zijn met de eerste top enzoverder.
     // Zo wordt een kliek opgebouwd.
-    public static void bAndB(UndirectedGraph G, List<Node> toppen, int diepte, List<Node> CBC, List<Node> best){
+    private static int beste = 0;
+
+    public static void bAndB(UndirectedGraph G, List<Node> toppen, int diepte){
         int m = 0;
 
         if(!toppen.isEmpty()){
-            while(m < toppen.size()-1 && diepte + toppen.size()-1-m > best.size()){
-                // Door een nieuwe lijst van adjacente toppen uit de huidige lijst te maken, gaan we een niveau dieper. Met deze lijst voeren we
-                // het algoritme opnieuw uit.
-                List<Node> toppenNieuw = new ArrayList<>();
-                for(int j = m+1; j < toppen.size(); j++){
-                    if(G.getNeighbours(toppen.get(m)).contains(toppen.get(j))){
-                        toppenNieuw.add(toppen.get(j));
+            while(m < toppen.size()-1){
+                if(diepte + toppen.size()-1-m > beste){
+                    // Door een nieuwe lijst van adjacente toppen uit de huidige lijst te maken, gaan we een niveau dieper. Met deze lijst voeren we
+                    // het algoritme opnieuw uit.
+                    List<Node> toppenNieuw = new ArrayList<>();
+                    for(int j = m+1; j < toppen.size(); j++){
+                        if(G.getNeighbours(toppen.get(m)).contains(toppen.get(j))){
+                            toppenNieuw.add(toppen.get(j));
+                        }
                     }
+                    bAndB(G, toppenNieuw, diepte+1);
+                } else {
+                    m = toppen.size()-2;
                 }
-                CBC.add(toppen.get(m));
-                bAndB(G, toppenNieuw, diepte+1, CBC, best);
-                CBC.remove(toppen.get(m));
                 m++;
             }
             // Als we op het einde van een lijst zitten, kunnen we niet meer verder en hebben we een maximale kliek gevonden.
-            if(m == toppen.size()-1){
-                CBC.add(toppen.get(m));
-                if(CBC.size()> best.size()) {
-                    best.clear();
-                    best.addAll(CBC);
-                }
-                CBC.remove(toppen.get(m));
+            if(diepte> beste) {
+                beste = diepte;
             }
-        } else if(CBC.size()> best.size()) {
-            best.clear();
-            best.addAll(CBC);
+        } else if( diepte -1 > beste) {
+            beste = diepte -1;
         }
 
     }
 
-    public static List<Node> maximumKliek(UndirectedGraph G){
-        List<Node> CBC = new ArrayList<>();
-        List<Node> best = new ArrayList<>();
-        bAndB(G, G.getAllNodes(), 1, CBC, best);
-        return best;
+    public static int maximumKliek(UndirectedGraph G){
+        bAndB(G, G.getAllNodes(), 1);
+        return beste;
 
     }
 
@@ -56,8 +52,8 @@ public class BranchAndBound {
         for(int i = 0; i < testFiles.size(); i++){
             UndirectedGraph graph = rg.readGraph("DIMACSBenchmarkSet", testFiles.get(i));
             long startTime = System.currentTimeMillis();
-            List<Node> best = maximumKliek(graph);
-            System.out.println(testFiles.get(i) + ": " + best.size()  + ": " + String.valueOf(System.currentTimeMillis()-startTime));
+            int beste = maximumKliek(graph);
+            System.out.println(testFiles.get(i) + ": " + beste  + ": " + String.valueOf(System.currentTimeMillis()-startTime));
         }
     }
 }
