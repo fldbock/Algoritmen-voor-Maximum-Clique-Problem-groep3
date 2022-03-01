@@ -59,5 +59,40 @@ public class BranchAndBound {
             System.out.println(testFiles.get(i) + ": " + best  + ": " + String.valueOf(System.currentTimeMillis()-startTime));
         }
     }
+
+    /**
+     * public static void main(String[] args){
+     *         UndirectedGraph graph2 = new UndirectedGraph();
+     *         Node    a = graph2.addNode("1"),
+     *                 b = graph2.addNode("2"),
+     *                 c = graph2.addNode("3"),
+     *                 d = graph2.addNode("4"),
+     *                 e = graph2.addNode("5"),
+     *                 f = graph2.addNode("6"),
+     *                 g = graph2.addNode("7"),
+     *                 h = graph2.addNode("8");
+     *         graph2.addEdge(a, b);
+     *         graph2.addEdge(a, d);
+     *         graph2.addEdge(a, e);
+     *         graph2.addEdge(b, c);
+     *         graph2.addEdge(b, d);
+     *         graph2.addEdge(b, f);
+     *         graph2.addEdge(b, g);
+     *         graph2.addEdge(c, d);
+     *         graph2.addEdge(c, g);
+     *         graph2.addEdge(c, h);
+     *         graph2.addEdge(d, e);
+     *         graph2.addEdge(d, f);
+     *         graph2.addEdge(d, g);
+     *         graph2.addEdge(d, h);
+     *         graph2.addEdge(e, f);
+     *         graph2.addEdge(f, g);
+     *         graph2.addEdge(g, h);
+     *
+     *         long startTime = System.currentTimeMillis();
+     *         int best = maximumKliek(graph2);
+     *         System.out.println(best  + ": " + String.valueOf(System.currentTimeMillis()-startTime));
+     *     }
+    */
 }
 
