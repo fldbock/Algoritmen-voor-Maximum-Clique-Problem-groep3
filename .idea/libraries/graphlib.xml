@@ -1,7 +1,7 @@
 <component name="libraryTable">
   <library name="graphlib">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../graphlib.jar!/" />
+      <root url="jar://D:/School/Semester2/Discrete algoritmen/graphlib.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
