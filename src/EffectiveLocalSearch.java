@@ -74,7 +74,7 @@ public class EffectiveLocalSearch {
                 for (Node node : cc) {
                     if (rest.contains(node)) {
                         // gebruik om;
-                        int j = 0;
+                        int j=0;
                         if (j > i) {
                             v = node;
                             i = j;
