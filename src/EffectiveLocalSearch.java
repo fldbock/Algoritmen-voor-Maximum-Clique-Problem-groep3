@@ -3,8 +3,6 @@ import graphlib.edges.UndirectedEdge;
 import graphlib.nodes.Node;
 import graphlib.edges.Edge;
 
-import java.io.*;
-import java.net.URL;
 import java.util.*;
 
 public class EffectiveLocalSearch {
@@ -17,7 +15,7 @@ public class EffectiveLocalSearch {
         Map<Node, Integer> pa = new HashMap<>(); // pa = potential additions
         ArrayList<Node> intersection = new ArrayList<>(); // intersection = intersection of the vertices in pa and rest
         ArrayList<Node> om = new ArrayList<>(); // om = one edge missing = vertices that are connected to |cc| - 1 vertices of cc
-        ArrayList<Node> best = new ArrayList<>; // best = best clique to now on
+        ArrayList<Node> best = new ArrayList<>(); // best = best clique to now on
         int g = 0;
         int gmax = 0;
 
@@ -90,26 +88,17 @@ public class EffectiveLocalSearch {
                 }
             }
 
-            //update pa, om and intersection
-            if
-        }
-    }
-
-    public void recursiveEffectiveLocalSearch(UndirectedGraph graph, ArrayList<Node> nodes, ArrayList<Node> cc, HashMap<Node,Integer> pa, ArrayList<Node> om, ArrayList<Node> best, ) {
-        ArrayList<Node> prevCC = cc;
-        ArrayList<Node> rest = cc;
-        List<Node> nodes = graph.getAllNodes();
-        Map<Node, Integer> potentialAdds = new HashMap<Node, Integer>();
-        for (Node node: nodes){
-            potentialAdds.put(node, graph.getDegree(node));
-        }
-        if (prevCC.size()==0){
-
-        }
-        int g = 0;
-        int gmax = 0;
-        while (gmax==0) {
-            gmax++;
+            //update pa, om and intersection  --> NOG NIET AF
+            if (cc.contains(v)){
+                for (Node node: pa.keySet()) {
+                    if (graph.containsEdge(node,v)) {
+                        pa.replace(node, pa.get(node) -1);
+                    } else {
+                        pa.remove(node);
+                        om.add(node);
+                    }
+                }
+            }
         }
     }
 }
