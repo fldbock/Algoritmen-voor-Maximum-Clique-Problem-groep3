@@ -2,12 +2,8 @@ import graphlib.graphs.UndirectedGraph;
 import graphlib.nodes.Node;
 import java.util.*;
 
-// Het algoritme valt het best te snappen door het voorbeeld op pagina 2 van de Branch and Bound paper te volgen.
 
 public class BranchAndBound {
-    // Het algoritme werkt adhv de parameter diepte. Diepte 1 is wanneer we 1 top bekijken, diepte 2 is wanneer we de adjacente toppen bekijken,
-    // diepte 3 is wanneer we de adjacente toppen van een adjacente top bekijken, die bovendien ook nog steeds adjacent zijn met de eerste top enzoverder.
-    // Zo wordt een kliek opgebouwd.
     private static int beste = 0;
 
     public static void bAndB(UndirectedGraph G, List<Node> toppen, int diepte){
@@ -16,8 +12,6 @@ public class BranchAndBound {
         if(!toppen.isEmpty()){
             while(m < toppen.size()-1){
                 if(diepte + toppen.size()-1-m > beste){
-                    // Door een nieuwe lijst van adjacente toppen uit de huidige lijst te maken, gaan we een niveau dieper. Met deze lijst voeren we
-                    // het algoritme opnieuw uit.
                     List<Node> toppenNieuw = new ArrayList<>();
                     for(int j = m+1; j < toppen.size(); j++){
                         if(G.getNeighbours(toppen.get(m)).contains(toppen.get(j))){
@@ -30,18 +24,27 @@ public class BranchAndBound {
                 }
                 m++;
             }
-            // Als we op het einde van een lijst zitten, kunnen we niet meer verder en hebben we een maximale kliek gevonden.
             if(diepte> beste) {
                 beste = diepte;
             }
-        } else if( diepte -1 > beste) {
-            beste = diepte -1;
+        } else {
+            diepte--;
+            if( diepte > beste) {
+                beste = diepte;
+            }
         }
 
     }
 
     public static int maximumKliek(UndirectedGraph G){
-        bAndB(G, G.getAllNodes(), 1);
+        Comparator<Node> nodeComparator = (node1, node2) -> {
+            int n1 = G.getDegree(node1); int n2 = G.getDegree(node2);
+            return Integer.compare(n1, n2);
+        };
+        List<Node> toppen = G.getAllNodes();
+        toppen.sort(nodeComparator);
+        beste = 0;
+        bAndB(G, toppen, 1);
         return beste;
 
     }
@@ -52,9 +55,44 @@ public class BranchAndBound {
         for(int i = 0; i < testFiles.size(); i++){
             UndirectedGraph graph = rg.readGraph("DIMACSBenchmarkSet", testFiles.get(i));
             long startTime = System.currentTimeMillis();
-            int beste = maximumKliek(graph);
-            System.out.println(testFiles.get(i) + ": " + beste  + ": " + String.valueOf(System.currentTimeMillis()-startTime));
+            int best = maximumKliek(graph);
+            System.out.println(testFiles.get(i) + ": " + best  + ": " + String.valueOf(System.currentTimeMillis()-startTime));
         }
     }
+
+    /**
+     * public static void main(String[] args){
+     *         UndirectedGraph graph2 = new UndirectedGraph();
+     *         Node    a = graph2.addNode("1"),
+     *                 b = graph2.addNode("2"),
+     *                 c = graph2.addNode("3"),
+     *                 d = graph2.addNode("4"),
+     *                 e = graph2.addNode("5"),
+     *                 f = graph2.addNode("6"),
+     *                 g = graph2.addNode("7"),
+     *                 h = graph2.addNode("8");
+     *         graph2.addEdge(a, b);
+     *         graph2.addEdge(a, d);
+     *         graph2.addEdge(a, e);
+     *         graph2.addEdge(b, c);
+     *         graph2.addEdge(b, d);
+     *         graph2.addEdge(b, f);
+     *         graph2.addEdge(b, g);
+     *         graph2.addEdge(c, d);
+     *         graph2.addEdge(c, g);
+     *         graph2.addEdge(c, h);
+     *         graph2.addEdge(d, e);
+     *         graph2.addEdge(d, f);
+     *         graph2.addEdge(d, g);
+     *         graph2.addEdge(d, h);
+     *         graph2.addEdge(e, f);
+     *         graph2.addEdge(f, g);
+     *         graph2.addEdge(g, h);
+     *
+     *         long startTime = System.currentTimeMillis();
+     *         int best = maximumKliek(graph2);
+     *         System.out.println(best  + ": " + String.valueOf(System.currentTimeMillis()-startTime));
+     *     }
+    */
 }
 
