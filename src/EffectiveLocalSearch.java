@@ -42,6 +42,9 @@ public class EffectiveLocalSearch {
                 intersection.add(node);
             } else {
                 pa.remove(node);
+                for (Node node1: graph.getNeighbours(node)) {
+                    pa.replace(node1, pa.get(node1) -1);
+                }
                 om.add(node);
             }
         }
@@ -68,9 +71,27 @@ public class EffectiveLocalSearch {
                     gmax = g;
                 }
             } else { //Drop-phase
+                v = null;
+                i = 0;
+                for (Node node : cc) {
+                    if (rest.contains(node)) {
+                        // gebruik om;
+                        if (j > i) {
+                            v = node;
+                            i = j;
+                        }
+                    }
+                }
+                cc.remove(v);
+                g--;
+                rest.remove(v);
+                if (d.contains(v)) {
+                    d.remove(v);
+                }
+            }
 
-
-
+            //update pa, om and intersection
+            if
         }
     }
 
