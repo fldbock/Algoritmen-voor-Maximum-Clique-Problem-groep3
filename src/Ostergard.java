@@ -38,13 +38,6 @@ public class Ostergard {
 
     // we maken een privaat backtracking algoritme.
     private static boolean maxKliek(UndirectedGraph G, List<Node> U, int size) {
-        if (U.isEmpty()) {
-            if (size > max) {
-                max = size;
-                gevonden = true;
-                return gevonden;
-            }
-        }
         while (!U.isEmpty()) {
             if (size + U.size() <= max) {
                 return gevonden;
@@ -61,15 +54,23 @@ public class Ostergard {
             i--;
             // we hebben nu i = min{j|v_j \in U}
             if (size + c[i] <= max) {
-                return gevonden;
+                return false;
             }
             U.remove(toppen.get(i));
             U.retainAll(G.getNeighbours(toppen.get(i)));
             maxKliek(G, U, size + 1);
             if (gevonden) {return gevonden;}
         }
+        if (U.isEmpty()) {
+            if (size > max) {
+                max = size;
+                gevonden = true;
+                return gevonden;
+            }
+        }
         return gevonden;
     }
+    
 
     public static void main(String[] args) {
         ReadGraph rg = new ReadGraph();
