@@ -76,7 +76,7 @@ public class EffectiveLocalSearch {
                         int j = 0;
                         for (Node node1: om) {
                             if (!graph.containsEdge(node,node1)) {
-                                j++// gebruik om;
+                                j++;// gebruik om;
                             }
                         }
                         if (j > i) {
