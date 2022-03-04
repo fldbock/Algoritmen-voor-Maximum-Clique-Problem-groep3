@@ -6,7 +6,7 @@ import java.util.*;
 public class BranchAndBound {
     private static int beste = 0;
 
-    public static void bAndB(UndirectedGraph G, List<Node> toppen, int diepte){
+    private static void bAndB(UndirectedGraph G, List<Node> toppen, int diepte){
         int m = 0;
 
         if(!toppen.isEmpty()){
