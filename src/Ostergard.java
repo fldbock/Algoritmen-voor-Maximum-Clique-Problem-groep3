@@ -31,9 +31,7 @@ public class Ostergard {
             gevonden = false;
             maxKliek(G, U, 1, toppen);
             // als gevonden = true, dan is er een kliek met v_i die 1 groter is dan de max kliek in S_{i+1}
-            if(gevonden){
-                max ++;
-            }
+            if(gevonden){ max ++; }
             c[i] = max;
         }
         return c[0];
@@ -56,24 +54,24 @@ public class Ostergard {
                 i++;
             }
             i--;
-            // we hebben nu i = min{j|v_j \in U}, we snoeien opnieuw, als de voorlopige grote plus de max kliek met
-            // top v_i kleiner zijn dan het max, dan kunnen we zeker geen grotere kliek dan max bekomen
+            // we hebben nu i = min{j|v_j \in U}, we snoeien opnieuw, als de voorlopige grootte plus de max kliek uit
+            // S_i kleiner is dan het max, dan kunnen we zeker geen grotere kliek dan max bekomen
             if (size + c[i] <= max) {
                 return;
             }
             // we weten dat we door v_i toe te voegen mogelijks een nieuwe maximum kliek kunnen krijgen, we doen dit dus
             U.remove(toppen.get(i));
-            U.retainAll(G.getNeighbours(toppen.get(i)));
-            maxKliek(G, U, size + 1,toppen);
+            ArrayList <Node> newU = new ArrayList<Node>(U);
+            newU.retainAll(G.getNeighbours(toppen.get(i)));
+            maxKliek(G, newU, size + 1,toppen);
             // als gevonden = true, dan hebben we een kliek gevonden die groter is dan onze max, we kunnen maximaal
             // een kliek vinden die 1 groter is dan max, dus we returnen true, en in de hoofdmethode gaat max ++
-            if (gevonden) {return;}
+            if (gevonden) {return;} // als gevonden=false, herstart de while en proberen we met het volgende elt uit U
         }
         // als we hier zijn, is U zeker leeg, want anders zaten we nog in de while lus
         if (size > max) {
             gevonden = true;
         }
-        // we geven nu terug of we al dan niet een kliek gevonden hebben.
     }
 
     public static void main(String[] args) {
