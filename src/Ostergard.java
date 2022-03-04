@@ -70,7 +70,7 @@ public class Ostergard {
         }
         return gevonden;
     }
-    
+
 
     public static void main(String[] args) {
         ReadGraph rg = new ReadGraph();
