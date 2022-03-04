@@ -20,7 +20,7 @@ public class EffectiveLocalSearch {
         int gmax = 0;
 
 
-        //We build a beginning clique and initialise pa ### MOET DIT VOOR ELKE v ?
+        //We build a beginning clique and initialise pa ### MOET DIT VOOR ELKE v ???
         int i = 0;
         Node v = null;
         for (Node node: nodes) {
@@ -73,8 +73,12 @@ public class EffectiveLocalSearch {
                 i = 0;
                 for (Node node : cc) {
                     if (rest.contains(node)) {
-                        // gebruik om;
-                        int j=0;
+                        int j = 0;
+                        for (Node node1: om) {
+                            if (!graph.containsEdge(node,node1)) {
+                                j++;// gebruik om;
+                            }
+                        }
                         if (j > i) {
                             v = node;
                             i = j;
@@ -84,13 +88,11 @@ public class EffectiveLocalSearch {
                 cc.remove(v);
                 g--;
                 rest.remove(v);
-                if (d.contains(v)) {
-                    d.remove(v);
-                }
+                d.remove(v);
             }
 
             //update pa, om and intersection  --> NOG NIET AF
-            if (cc.contains(v)){
+            if (cc.contains(v)){ // v is just added
                 for (Node node: pa.keySet()) {
                     if (graph.containsEdge(node,v)) {
                         pa.replace(node, pa.get(node) -1);
@@ -98,6 +100,14 @@ public class EffectiveLocalSearch {
                         pa.remove(node);
                         om.add(node);
                     }
+                }
+            } else { //node v just got dropped
+
+            }
+            intersection= new ArrayList<>();
+            for (Node node: rest) {
+                if (pa.containsKey(node)){
+                    intersection.add(node);
                 }
             }
         }
