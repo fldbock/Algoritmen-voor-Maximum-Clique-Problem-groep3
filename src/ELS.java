@@ -14,7 +14,7 @@ public class ELS {
     private static ArrayList<Node> intersectionpap;
     private static ArrayList<Node> intersectionccp;
 
-    public static void main(String[] args){
+  public static void main(String[] args){
         ReadGraph rg = new ReadGraph();
         List<String> testFiles = new ArrayList<>(List.of("C125.9", "C250.9","DSJC1000_5", "DSJC500_5", "C2000.5", "brock200_2", "brock200_4", "brock400_2", "brock400_4", "brock800_2", "brock800_4", "gen200_p0.9_44", "hamming10-4", "hamming8-4", "keller4", "keller5"));
         for(int i = 0; i < testFiles.size(); i++){
@@ -26,7 +26,7 @@ public class ELS {
             ArrayList<Node> nodes = new ArrayList<>(graph1.getAllNodes());
             Node v = nodes.get(0);
             cc.add(v);
-            ccbest=cc;
+            ccbest= null;
             om = new ArrayList<>();
             ArrayList<Node> paopt = new ArrayList<>();
             pa = new HashMap<>();
@@ -51,11 +51,13 @@ public class ELS {
         }
     }
 
+
+
     public static int effectiveLocalSearch() {
         int gmax = -1;
         while (gmax != 0) {
-            ArrayList<Node> ccprev = cc;
-            ArrayList<Node> d = ccprev;
+            ArrayList<Node> ccprev = new ArrayList(cc);
+            ArrayList<Node> d = new ArrayList<>(cc);
             p = new ArrayList<>(graph.getAllNodes());
             int g = 0;
             gmax = 0;
@@ -68,7 +70,7 @@ public class ELS {
                     g++;
                     if (g > gmax) {
                         gmax = g;
-                        ccbest = cc;
+                        ccbest = new ArrayList<>(cc);
                     }
                 } else { //drop-phase
                     v = drop();
@@ -82,9 +84,9 @@ public class ELS {
                 //intersectionpap = intersection(pa,p);
             }
             if (gmax>0) {
-                cc =ccbest;
+                cc = new ArrayList<>(ccbest);
             } else {
-                cc = ccprev;
+                cc = new ArrayList<>(ccprev);
             }
         }
         return cc.size();
