@@ -17,50 +17,53 @@ public class ELS {
     public static void main(String[] args) {
         ReadGraph rg = new ReadGraph();
         List<String> testFiles = new ArrayList<>(List.of("C125.9", "C250.9", "DSJC1000_5", "DSJC500_5", "C2000.5", "brock200_2", "brock200_4", "brock400_2", "brock400_4", "brock800_2", "brock800_4", "gen200_p0.9_44", "hamming10-4", "hamming8-4", "keller4", "keller5"));
-        // for(int i = 0; i < testFiles.size(); i++){
-        //  UndirectedGraph graph1 = rg.readGraph("DIMACSBenchmarkSet", testFiles.get(i));
-        UndirectedGraph graph2 = new UndirectedGraph();
-        Node a = graph2.addNode("1"),
-                b = graph2.addNode("2"),
-                c = graph2.addNode("3"),
-                d = graph2.addNode("4"),
-                e = graph2.addNode("5"),
-                f = graph2.addNode("6"),
-                g = graph2.addNode("7"),
-                h = graph2.addNode("8");
-        graph2.addEdge(a, b);
-        graph2.addEdge(a, d);
-        graph2.addEdge(a, e);
-        graph2.addEdge(b, c);
-        graph2.addEdge(b, d);
-        graph2.addEdge(b, f);
-        graph2.addEdge(b, g);
-        graph2.addEdge(c, d);
-        graph2.addEdge(c, g);
-        graph2.addEdge(c, h);
-        graph2.addEdge(d, e);
-        graph2.addEdge(d, f);
-        graph2.addEdge(d, g);
-        graph2.addEdge(d, h);
-        graph2.addEdge(e, f);
-        graph2.addEdge(f, g);
-        graph2.addEdge(g, h);
-        graph = graph2;
-        nodes = new ArrayList<>(graph2.getAllNodes());
-        cc = new ArrayList<>();
-        long startTime = System.currentTimeMillis();
-
-        //Hieronder stellen we een begingraaf op met 1 top, later proberen via greedy!
-
-        Node v = nodes.get(0);
-        cc.add(v);
-        ccbest = new ArrayList<>(cc);
+        for (int i = 0; i < testFiles.size(); i++) {
+            graph = rg.readGraph("DIMACSBenchmarkSet", testFiles.get(i));
+            /** UndirectedGraph graph2 = new UndirectedGraph();
+            * Node a = graph2.addNode("1"),
+            * b = graph2.addNode("2"),
+            * c = graph2.addNode("3"),
+            * d = graph2.addNode("4"),
+            * e = graph2.addNode("5"),
+            * f = graph2.addNode("6"),
+            * g = graph2.addNode("7"),
+            * h = graph2.addNode("8");
+            * graph2.addEdge(a, b);
+            * graph2.addEdge(a, d);
+            * graph2.addEdge(a, e);
+            * graph2.addEdge(b, c);
+            * graph2.addEdge(b, d);
+            * graph2.addEdge(b, f);
+            * graph2.addEdge(b, g);
+            * graph2.addEdge(c, d);
+            * graph2.addEdge(c, g);
+            * graph2.addEdge(c, h);
+            * graph2.addEdge(d, e);
+            * graph2.addEdge(d, f);
+            * graph2.addEdge(d, g);
+            * graph2.addEdge(d, h);
+            * graph2.addEdge(e, f);
+            * graph2.addEdge(f, g);
+            * graph2.addEdge(g, h);
+             */
 
 
-        generatePAandOM();
-        int numNodes = effectiveLocalSearch();
-        System.out.println(testFiles.get(0) + ": " + numNodes + ": " + String.valueOf(System.currentTimeMillis() - startTime));
-        //}
+            nodes = new ArrayList<>(graph.getAllNodes());
+            cc = new ArrayList<>();
+            long startTime = System.currentTimeMillis();
+
+            //Hieronder stellen we een begingraaf op met 1 top, later proberen via greedy!
+
+            Node v = nodes.get(0);
+            cc.add(v);
+            ccbest = new ArrayList<>(cc);
+
+
+            generatePAandOM();
+            int numNodes = effectiveLocalSearch();
+            System.out.println(testFiles.get(i) + ": " + numNodes + ": " + String.valueOf(System.currentTimeMillis() - startTime));
+            //}
+        }
     }
 
 
@@ -170,14 +173,15 @@ public class ELS {
                     i--;
                 }
             }
-                for (Node node : pa.keySet()) {
-                    if (graph.containsEdge(v, node)) {
-                        pa.replace(node, pa.get(node) - 1);
-                    } else {
-                        pa.remove(node);
-                        om.add(node);
-                    }
+            ArrayList<Node> copyPA = new ArrayList<>(pa.keySet());
+            for (Node node : copyPA) {
+                if (graph.containsEdge(v, node)) {
+                    pa.replace(node, pa.get(node) - 1);
+                } else {
+                    pa.remove(node);
+                    om.add(node);
                 }
+            }
         } else { //Node v just got removed
             for (int i = 0; i < om.size(); i++) {
                 Node u = om.get(i);
