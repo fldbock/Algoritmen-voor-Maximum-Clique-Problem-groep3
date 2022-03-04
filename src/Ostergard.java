@@ -3,6 +3,7 @@ import graphlib.nodes.Node;
 
 import java.util.*;
 import java.lang.*;
+import java.util.stream.Collectors;
 
 public class Ostergard {
     private static boolean gevonden;
@@ -63,8 +64,12 @@ public class Ostergard {
             }
             // we weten dat we door v_i toe te voegen mogelijks een nieuwe maximum kliek kunnen krijgen, we doen dit dus
             U.remove(toppen.get(i));
-            U.retainAll(G.getNeighbours(toppen.get(i)));
-            maxKliek(G, U, size + 1,toppen);
+            List<Node> intersection = U.stream()
+                    .distinct()
+                    .filter(G.getNeighbours(toppen.get(i))::contains)
+                    .collect(Collectors.toList());
+
+            maxKliek(G, intersection, size + 1,toppen);
             // als gevonden = true, dan hebben we een kliek gevonden die groter is dan onze max, we kunnen maximaal
             // een kliek vinden die 1 groter is dan max, dus we returnen true, en in de hoofdmethode gaat max ++
             if (gevonden) {return;}
