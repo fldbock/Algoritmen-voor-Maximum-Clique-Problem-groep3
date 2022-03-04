@@ -7,12 +7,17 @@ import java.util.*;
 public class BranchAndBound {
     private static int beste = 0;
 
-    public static void bAndB(UndirectedGraph G, List<Node> toppen, int diepte) {
+    private static void bAndB(UndirectedGraph G, List<Node> toppen, int diepte) {
         int m = 0;
 
         if (!toppen.isEmpty()) {
+            // Voor elke top bekijken we de kliek die we bekomen door te vertrekken van die top. Om klieken niet meerdere keren te bekomen,
+            // overlopen we ze op volgorde.
             while (m < toppen.size() - 1) {
+                // boundfunctie
                 if (diepte + toppen.size() - 1 - m > beste) {
+                    // Uit de toppen die nog bij de kliek kunnen horen, selecteren we enkel de adjacente met onze vaste top. Op die lijst
+                    // werken we verder.
                     List<Node> toppenNieuw = new ArrayList<>();
                     for (int j = m + 1; j < toppen.size(); j++) {
                         if (G.getNeighbours(toppen.get(m)).contains(toppen.get(j))) {
@@ -21,7 +26,8 @@ public class BranchAndBound {
                     }
                     bAndB(G, toppenNieuw, diepte + 1);
                 } else {
-                    m = toppen.size() - 2;
+                    // Er wordt niet voldaan aan de boundfunctie, dus mag het algoritme stoppen.
+                    return;
                 }
                 m++;
             }
@@ -37,7 +43,8 @@ public class BranchAndBound {
 
     }
 
-    public static int maximumKliek(UndirectedGraph G) {
+    private static int maximumKliek(UndirectedGraph G) {
+        // We ordenen de toppen van kleinste naar grootste graad. Dit doet het algoritme een beetje sneller gaan.
         Comparator<Node> nodeComparator = (node1, node2) -> {
             int n1 = G.getDegree(node1);
             int n2 = G.getDegree(node2);
