@@ -39,16 +39,16 @@ public class GreedySwapsAndWeights {
                 bestClique = new ArrayList<>(clique);
             }
         }
-        //Apply greedy weighted for these nodes.
+        //Apply greedy weighted for starting in the least used nodes from above.
         Map<Node, Double> nodeWeights = new HashMap<>();
         for (int i = 0; i < DELTA * graph.getAllNodes().size(); i++){
-            Node node = Collections.max(countInCliques.entrySet(), Map.Entry.comparingByValue()).getKey();
-            countInCliques.remove(node);
+            Node startNode = Collections.max(countInCliques.entrySet(), Map.Entry.comparingByValue()).getKey();
+            countInCliques.remove(startNode);
             for (Node graphNode: graph.getAllNodes()){
                 nodeWeights.put(graphNode, 1.0);
             }
             for (int t = 1; t < MAX_ITER; t++) {
-                clique = greedyWeightCliquer(graph, node, nodeWeights);
+                clique = greedyWeightCliquer(graph, startNode, nodeWeights);
                 if (clique.size() > bestClique.size()){
                     bestClique = new ArrayList<>(clique);
                 }
@@ -94,8 +94,12 @@ public class GreedySwapsAndWeights {
         List<Node> clique = new ArrayList<>();
         clique.add(startnode);
         Map<Node, Integer> neighbourDegree = new HashMap<>();
+        Map<Node, Integer> valueMapCZero = new HashMap<>();
+        Map<Node, Integer> valueMapCOne = new HashMap<>();
         for (Node node:graph.getNeighbours(startnode)){
             neighbourDegree.put(node, 1);
+            valueMapAdder(graph, node, valueMapCZero, valueMapCOne);
+            valueMapCZero.put(node, adjacencyToCOneCounter(graph, node, valueMapCZero.keySet()));
         }
         int currentSwaps = 0;
         int totalSwaps = 0;
@@ -104,46 +108,61 @@ public class GreedySwapsAndWeights {
 
         //clique building loop
         while(clique.size() == Collections.max(neighbourDegree.values())){
-            //Build cZero and cOne
-            List<Node> cZero = new ArrayList<>();
-            List<Node> cOne = new ArrayList<>();
-            for (Node node: neighbourDegree.keySet()){
-                if (neighbourDegree.get(node) ==  clique.size()){
-                    cZero.add(node);
-                } else if (neighbourDegree.get(node) == clique.size()-1){
-                    cOne.add(node);
-                }
-            }
-
-            //find popular node to swap or add
-            int popularDegree = -1;
-            Node popularNode = null;
+            //Find the best node to add or swap based on adjacency to the cZero node set.
+            int bestNodeValue = -1;
             boolean swap = false;
-            for (Node node: cZero){
-                if (graph.getDegree(node) > popularDegree){
-                    popularDegree = graph.getDegree(node);
+            Node popularNode = null;
+            for(Node node : valueMapCZero.keySet()){
+                if (valueMapCZero.get(node)>bestNodeValue){
                     popularNode = node;
+                    bestNodeValue = valueMapCZero.get(node);
                 }
             }
-            if(totalSwaps >= START_SWAP & currentSwaps < MAX_CURRENT_SWAPS){
-                for (Node node: cOne){
-                    if (graph.getDegree(node) - 1 > popularDegree & !(node==lastSwapNode)){
-                        popularDegree = graph.getDegree(node) - 1;
+            if(totalSwaps >= START_SWAP & currentSwaps < MAX_CURRENT_SWAPS) {
+                for (Node node : valueMapCZero.keySet()){
+                    if (valueMapCOne.get(node)>bestNodeValue & node != lastSwapNode){
                         popularNode = node;
+                        bestNodeValue = valueMapCOne.get(node);
                         swap = true;
                     }
                 }
             }
-
-            //remove a node if swap is true.
+            //remove a node is swap is TRUE.
             if(swap) {
                 for (Node node : clique) {
                     if (!graph.getNeighbours(popularNode).contains(node)) {
                         removalNode = node;
                     }
                 }
+                List <Node> cOneNewList = new ArrayList<>();
+                for (Node node: neighbourDegree.keySet()){
+                    if (neighbourDegree.get(node)==clique.size()-2){
+                        cOneNewList.add(node);
+                    }
+                }
                 clique.remove(removalNode);
                 neighbourDegreeRemover(graph, removalNode, clique, neighbourDegree);
+                for (Node node: neighbourDegree.keySet()){
+                    if (neighbourDegree.get(node)==clique.size()-2 & cOneNewList.contains(node)){
+                        cOneNewList.remove(node);
+                    }
+                }
+                valueMapCZero.put(removalNode, valueMapCZero.size());
+                for (Node node : valueMapCZero.keySet()){
+                    valueMapCZero.put(node, valueMapCZero.get(node)+1);
+                }
+                for (Node node : valueMapCOne.keySet()){
+                    if (neighbourDegree.get(node) == clique.size()){
+                        valueMapAdder(graph, node, valueMapCZero, valueMapCOne);
+                        valueMapCZero.put(node, valueMapCOne.get(node));
+                        valueMapCOne.remove(node);
+                    } else {
+                        valueMapCOne.put(node, valueMapCOne.get(node)+1);
+                    }
+                }
+                for (Node node: cOneNewList){
+                    valueMapCOne.put(node, adjacencyToCOneCounter(graph, node, valueMapCZero.keySet()));
+                }
                 lastSwapNode = removalNode;
                 currentSwaps++;
                 totalSwaps++;
@@ -155,6 +174,22 @@ public class GreedySwapsAndWeights {
             clique.add(popularNode);
             neighbourDegree.remove(popularNode);
             neighbourDegreeAdder(graph, popularNode, clique, neighbourDegree);
+            valueMapCZero.remove(popularNode);
+            valueMapRemover(graph, popularNode, valueMapCZero, valueMapCOne);
+            Set<Node> keySetCopy = new HashSet<>(valueMapCZero.keySet());
+            for (Node node:keySetCopy){
+                if (neighbourDegree.get(node) != clique.size()){
+                    valueMapRemover(graph, node, valueMapCZero, valueMapCOne);
+                    valueMapCOne.put(node, valueMapCZero.get(node));
+                    valueMapCZero.remove(node);
+                }
+            }
+            keySetCopy = new HashSet<>(valueMapCOne.keySet());
+            for (Node node: keySetCopy){
+                if (neighbourDegree.get(node) != clique.size()-1){
+                    valueMapCOne.remove(node);
+                }
+            }
         }
 
         return clique;
@@ -175,9 +210,8 @@ public class GreedySwapsAndWeights {
 
     //updates the amount of connections when removalNode was removed from clique
     private static void neighbourDegreeRemover(UndirectedGraph graph, Node removalNode, List<Node> clique, Map<Node, Integer> neighbourDegree){
-        Set<Node> keySetCopy = new HashSet<>(neighbourDegree.keySet());
-        for (Node node: keySetCopy){
-            if (graph.getNeighbours(node).contains(removalNode)){
+        for (Node node: graph.getNeighbours(removalNode)){
+            if (neighbourDegree.keySet().contains(node)){
                 if (neighbourDegree.get(node) > 1){
                     neighbourDegree.put(node, neighbourDegree.get(node) - 1);
                 } else {
@@ -186,6 +220,38 @@ public class GreedySwapsAndWeights {
             }
         }
         neighbourDegree.put(removalNode, clique.size());
+    }
+
+    private static void valueMapAdder(UndirectedGraph graph, Node addedNode, Map<Node, Integer> valueMapCZero, Map<Node, Integer> valueMapCOne){
+        for (Node node: graph.getNeighbours(addedNode)){
+            if (valueMapCZero.containsKey(node)){
+                valueMapCZero.put(node, valueMapCZero.get(node)+1);
+            }
+            if (valueMapCOne.containsKey(node)){
+                valueMapCOne.put(node, valueMapCOne.get(node)+1);
+            }
+        }
+    }
+
+    private static void valueMapRemover(UndirectedGraph graph, Node removedNode, Map<Node, Integer> valueMapCZero, Map<Node, Integer> valueMapCOne){
+        for (Node node: graph.getNeighbours(removedNode)){
+            if(valueMapCZero.containsKey(node)){
+                valueMapCZero.put(node, valueMapCZero.get(node)-1);
+            }
+            if(valueMapCOne.containsKey(node)){
+                valueMapCOne.put(node, valueMapCOne.get(node)-1);
+            }
+        }
+    }
+
+    private static int adjacencyToCOneCounter(UndirectedGraph graph, Node newCone, Set<Node> cZero){
+        int value = 0;
+        for (Node node: graph.getNeighbours(newCone)){
+            if (cZero.contains(node)){
+                value++;
+            }
+        }
+        return value;
     }
 
     //updates weights based on nodes used in clique.
@@ -199,7 +265,7 @@ public class GreedySwapsAndWeights {
         }
     }
 
-//    builds a graph class clique from a list of Nodes
+//    builds a UndirectedGraph class clique from a list of Nodes
 //    public static UndirectedGraph cliqueFromNodes(List<Node> clique){
 //        UndirectedGraph graph = new UndirectedGraph();
 //        for (Node node:clique){
