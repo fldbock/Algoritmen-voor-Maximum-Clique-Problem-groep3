@@ -1,6 +1,5 @@
 import graphlib.graphs.UndirectedGraph;
 import graphlib.nodes.Node;
-
 import java.util.*;
 
 public class ELS {
