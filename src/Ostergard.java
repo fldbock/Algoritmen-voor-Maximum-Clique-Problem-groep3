@@ -74,8 +74,8 @@ public class Ostergard {
 
     public static void main(String[] args) {
         ReadGraph rg = new ReadGraph();
-        List<String> testFiles = new ArrayList<>(List.of(/*"C125.9", "C250.9","DSJC1000_5", "DSJC500_5", "C2000.5", */"brock200_2", "brock200_4",
-                "brock400_2", "brock400_4", "brock800_2", "brock800_4", "gen200_p0.9_44", "hamming10-4", "hamming8-4", "keller4", "keller5"));
+        List<String> testFiles = new ArrayList<>(List.of(/*"C125.9", "C250.9","DSJC1000_5", "DSJC500_5", "C2000.5", "brock200_2", "brock200_4",
+                "brock400_2", "brock400_4", "brock800_2", "brock800_4", "gen200_p0.9_44", "hamming10-4",*/ "hamming8-4", "keller4", "keller5"));
         for (int i = 0; i < testFiles.size(); i++) {
             UndirectedGraph graph = rg.readGraph("DIMACSBenchmarkSet", testFiles.get(i));
             long startTime = System.currentTimeMillis();
