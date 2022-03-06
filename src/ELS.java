@@ -69,10 +69,10 @@ public class ELS {
         return cc.size();
     }
 
-    private static ArrayList<Node> intersection(Collection<Node> list1, Collection<Node> list2) {
+    private static ArrayList<Node> intersection(Collection<Node> collection1, Collection<Node> collection2) {
         ArrayList<Node> intersection = new ArrayList<>();
-        for (Node node1 : list1) {
-            if (list2.contains(node1)) {
+        for (Node node1 : collection1) {
+            if (collection2.contains(node1)) {
                 intersection.add(node1);
             }
         }
