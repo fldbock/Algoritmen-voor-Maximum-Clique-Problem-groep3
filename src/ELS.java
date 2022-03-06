@@ -31,17 +31,17 @@ public class ELS {
     public static int effectiveLocalSearch(UndirectedGraph graph1, boolean naive) {
         graph = graph1;
         nodes = new ArrayList<>(graph.getAllNodes());
-        generateClique(naive);
-        generatePAandOM();
+        generateClique(naive); //Deze methode genereert een beginkliek cc en ccbest. Voor 'naive ==true' is dit 1 top, voor 'naive==false' gebruiken we het GreedySequential algoritme.
+        generatePAandOM(); //De lijst PA (=possible adds) en OM (=one missing) worden aangemaakt voor de beginkliek cc.
 
         int gmax = -1;
-        while (gmax != 0) {
-            ArrayList<Node> ccprev = new ArrayList(cc);
+        while (gmax != 0) { //Zolang als we een grotere kliek gevonden hebben
+            ArrayList<Node> ccprev = new ArrayList<>(cc);
             ArrayList<Node> d = new ArrayList<>(cc);
             p = new ArrayList<>(graph.getAllNodes());
             int g = 0;
             gmax = 0;
-            while (d.size() != 0) {
+            while (d.size() != 0) { //Zolang als er nog toppen van ccprev in cc zitten
                 intersectionpap = intersection(pa.keySet(), p);
                 intersectionccp = intersection(cc, p);
                 Node v = null;
@@ -69,6 +69,50 @@ public class ELS {
             generatePAandOM();
         }
         return cc.size();
+    }
+
+    private static void generateClique(boolean naive) {
+        if (naive) {
+            cc = new ArrayList<Node>();
+            Node v = nodes.get(0);
+            cc.add(v);
+        } else {
+            GreedySequential gs = new GreedySequential();
+            cc=new ArrayList<Node>(gs.bestInNew(graph).getAllNodes());
+        }
+        ccbest = new ArrayList<>(cc);
+    }
+
+    private static void generatePAandOM() {
+        om = new ArrayList<>();
+        pa = new HashMap<>();
+        ArrayList<Node> optionsPA = new ArrayList<>();
+        for (Node node : nodes) {
+            if (!cc.contains(node)) {
+                int i = 0; // Aantal toppen in cc die niet adjacent zijn met top 'node'
+                int j = 0; // index voor iteratie
+                while (i < 2 & j < cc.size()) {
+                    if (!graph.containsEdge(node, cc.get(j))) {
+                        i++;
+                    }
+                    j++;
+                }
+                if (i == 0) {
+                    optionsPA.add(node);
+                } else if (i == 1) {
+                    om.add(node);
+                }
+            }
+        }
+        for (Node node1 : optionsPA) {
+            int k = 0;
+            for (Node node2 : optionsPA) {
+                if (graph.containsEdge(node1, node2)) {
+                    k++;
+                }
+            }
+            pa.put(node1, k);
+        }
     }
 
     private static ArrayList<Node> intersection(Collection<Node> collection1, Collection<Node> collection2) {
@@ -163,49 +207,5 @@ public class ELS {
                 }
             }
         }
-    }
-
-    private static void generatePAandOM() {
-        om = new ArrayList<>();
-        pa = new HashMap<>();
-        ArrayList<Node> optionsPA = new ArrayList<>();
-        for (Node node : nodes) {
-            if (!cc.contains(node)) {
-                int i = 0; // Number of nodes in cc that is not adjacent with node
-                int j = 0; // index for iteration
-                while (i < 2 & j < cc.size()) {
-                    if (!graph.containsEdge(node, cc.get(j))) {
-                        i++;
-                    }
-                    j++;
-                }
-                if (i == 0) {
-                    optionsPA.add(node);
-                } else if (i == 1) {
-                    om.add(node);
-                }
-            }
-        }
-        for (Node node1 : optionsPA) {
-            int k = 0;
-            for (Node node2 : optionsPA) {
-                if (graph.containsEdge(node1, node2)) {
-                    k++;
-                }
-            }
-            pa.put(node1, k);
-        }
-    }
-
-    private static void generateClique(boolean naive) {
-        if (naive) {
-            cc = new ArrayList<Node>();
-            Node v = nodes.get(0);
-            cc.add(v);
-        } else {
-            GreedySequential gs = new GreedySequential();
-            cc=new ArrayList<Node>(gs.bestInNew(graph).getAllNodes());
-        }
-        ccbest = new ArrayList<>(cc);
     }
 }
