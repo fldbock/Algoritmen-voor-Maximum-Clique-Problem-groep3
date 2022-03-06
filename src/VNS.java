@@ -5,43 +5,55 @@ import java.util.*;
 
 public class VNS {
 
+    public static void main(String[] args) {
+        ReadGraph rg = new ReadGraph();
+        List<String> testFiles = new ArrayList<>(List.of("C125.9", "C250.9","DSJC1000_5", "DSJC500_5", "C2000.5", "brock200_2", "brock200_4", "brock400_2", "brock400_4", "brock800_2", "brock800_4", "gen200_p0.9_44", "hamming10-4", "hamming8-4", "keller4", "keller5"));
+        for (int i = 0; i < testFiles.size(); i++) {
+            UndirectedGraph graph = rg.readGraph("DIMACSBenchmarkSet", testFiles.get(i));
+            long startTime = System.currentTimeMillis();
+            int beste = VNS(graph).size();
+            System.out.println(testFiles.get(i) + ": " + beste + ": " + String.valueOf(System.currentTimeMillis() - startTime));
+        }
+    }
+
     private int kmax = 5;
 
     // VNS: variable neighborhood search
-    public List<Node> VNS (UndirectedGraph G) {
+    public static List<Node> VNS (UndirectedGraph G) {
         // CBC: current best clique
-        // Alle toppen worden opgedeeld in 3 verzamelingen:
+        // Bij elke iteratie worden alle toppen opgedeeld in 3 verzamelingen
         // Ct: huidige kliek
-        // Vt: nog in te delen toppen
+        // Vt: huidge verzameling nog in te delen toppen
         // Tt: huidige transversal
-        // Ect: complement van de edges in Gt, Gt is de deelgraaf geïnduceerd door de toppen in Vt
+        // Gct: complement van deelgraaf van G voortgebracht door Vt
+        // phi: hashmap die voor elke top van G het aantal adjacente toppen in Ct weergeeft
         List<Node> CBC = new ArrayList<>();
         List<Node> Ct = new ArrayList<>();
         List<Node> Vt = G.getAllNodes();
         List<Node> Tt = new ArrayList<>();
-        List<Edge> Ect = new ArrayList<>();
-        for (Node node1: G.getAllNodes()) {
-            for (Node node2: G.getAllNodes()) {
-                if (node1 != node2) {
-                    if (!G.containsEdge(node1,node2)) {
-                        Edge edge = new Edge(node1,node2) {
-                            @Override
-                            public boolean isDirected() {
-                                return false;
-                            }
-                        };
-                        Ect.add(edge);
-                    }
+        // we creëren initiële Gct
+        UndirectedGraph Gct = new UndirectedGraph();
+        Map<Node, Integer> phi = new HashMap<>();
+        for (int i = 0; i<G.getAllNodes().size(); i++) {
+            Node node1 = G.getAllNodes().get(i);
+            Gct.addNode(node1);
+            phi.put(node1,0);
+            for (int j = 0; j<i; j++) {
+                Node node2 = G.getAllNodes().get(j);
+                if (!G.containsEdge(node1,node2)) {
+                    Gct.addEdge(node1,node2);
                 }
             }
         }
-        VND(Ct, Vt, Tt, Ect);
+        // we zoeken een initieel lokaal optimum
+        VND(G, Ct, Vt, Tt, Gct, phi);
+        CBC = List.copyOf(Ct);
         int k = 1;
-        while (k<=kmax) {
-            shake(Ct, Vt, Tt, Ect, k);
-            VND(Ct, Vt, Tt, Ect);
+        while (k<4 && k<Ct.size()) {
+            shake(G, Ct, Vt, Tt, Gct, phi, k);
+            VND(G, Ct, Vt, Tt, Gct, phi);
             if (Ct.size()>CBC.size()) {
-                CBC = Ct;
+                CBC = List.copyOf(Ct);
             } else {
                 k+=1;
             }
@@ -50,96 +62,156 @@ public class VNS {
     }
 
     // Shaking: k random toppen van Ct naar Vt verplaatsen
-    public void shake(List<Node> Ct, List<Node> Vt, List<Node> Tt, List<Edge> Ect, int k) {
-        if (k <= Ct.size()) {
-            Ct = null;
-        } else {
-            Collections.shuffle(Ct);
-            for (int i = 0; i < k; i++) {
-                Vt.add(Ct.get(i));
-                Ct.remove(Ct.get(i));
+    public static void shake(UndirectedGraph G, List<Node> Ct, List<Node> Vt, List<Node> Tt, UndirectedGraph Gct, Map<Node, Integer> phi, int k) {
+        Collections.shuffle(Ct);
+        for (int i = 0; i<k; i++) {
+            Node transferNode = Ct.get(Ct.size()-1);
+            Gct.addNode(transferNode);
+            Vt.add(transferNode);
+            Ct.remove(transferNode);
+            for (Node neighbor: G.getNeighbours(transferNode)) {
+                phi.put(neighbor,phi.get(neighbor)-1);
+            }
+        }
+        for (int i = 0; i < Tt.size(); i ++) {
+            Node node = Tt.get(i);
+            if (phi.get(node) == Ct.size()) {
+                Tt.remove(node);
+                Vt.add(node);
+                Gct.addNode(node);
+                for (Node neighbor: Gct.getAllNodes()) {
+                    if (!G.containsEdge(node,neighbor) && !neighbor.equals(node)) {
+                        Gct.addEdge(node,neighbor);
+                    }
+                }
+                i --;
             }
         }
     }
 
     // Variable neighborhood descent: local search met Ct als startkliek
-    public void VND(List<Node> Ct, List<Node> Vt, List<Node> Tt, List<Edge> Ect) {
-        //Moet nog geschreven worden
-        SVT(Ct, Vt, Tt, Ect);
-        while (!Vt.isEmpty()) {
-            greedy2(Ct, Vt, Tt, Ect);
-            SVT(Ct, Vt, Tt, Ect);
-        }
-        List<Node> Kt = new ArrayList<>();
-        while (!Kt.isEmpty()) {
-            interchangeStep(Ct, Vt, Tt, Ect, Kt);
-        }
-    }
+    public static void VND(UndirectedGraph G, List<Node> Ct, List<Node> Vt, List<Node> Tt, UndirectedGraph Gct, Map<Node, Integer> phi) {
 
-    //SVT: simplicial vertex test
-    public void SVT(List<Node> Ct, List<Node> Vt, List<Node> Tt, List<Edge> Ect) {
-        //MOET NOG GESCHREVEN WORDEN
-    }
-
-    //Greedy approach that selects node with biggest degree
-    public void greedy2(List<Node> Ct, List<Node> Vt, List<Node> Tt, List<Edge> Ect) {
-        // We mappen elke top in Vt op zijn graad in Gct
-        Map<Node, Integer> degree = new HashMap<>();
+        Map<Integer,List<Node>> degrees = new TreeMap<>();
         for (Node node: Vt) {
-            degree.put(node,0);
+            int degree = Gct.getDegree(node);
+            if (!degrees.containsKey(degree)) {
+                degrees.put(degree, new ArrayList<Node>());
+            }
+            degrees.get(degree).add(node);
         }
-        for (Edge edge: Ect) {
-            degree.put(edge.getNode1(),degree.get(edge.getNode1())+1);
-            degree.put(edge.getNode2(),degree.get(edge.getNode2())+1);
-        }
-        Node popularNode = Collections.min(degree.entrySet(), Map.Entry.comparingByValue()).getKey();
-        Ct.add(popularNode);
-        for (Edge edge: Ect) {
-            if (edge.contains(popularNode)) {
-                Ect.remove(edge);
-                for (Node neighbor: edge.getNodes()) {
-                    if (neighbor != popularNode) {
-                        Tt.add(neighbor);
-                        for (Edge edge2: Ect) {
-                            if (edge2.contains(neighbor)) {
-                                Ect.remove(edge2);
-                            }
-                        }
-                        Vt.remove(neighbor);
+        while (!Vt.isEmpty()) {
+            //SVT test
+            if (degrees.containsKey(0)) {
+                for (Node node: degrees.get(0)) {
+                    Ct.add(node);
+                    Vt.remove(node);
+                    Gct.removeNode(node);
+                    for (Node neighbor: G.getNeighbours(node)) {
+                        phi.put(neighbor,phi.get(neighbor)+1);
                     }
                 }
+                degrees.remove(0);
             }
-        }
-        Vt.remove(popularNode);
-    }
-
-    //interchangeStep
-    public void interchangeStep(List<Node> Ct, List<Node> Vt, List<Node> Tt, List<Edge> Ect, List<Node> Kt) {
-        //MOET NOG GESCHREVEN WORDEN
-    }
-
-    // Greedy approach that selects node with biggest degree
-    public List<Node> greedy (UndirectedGraph G) {
-        List<Node> bestClique = new ArrayList<>();
-        // Map nodes to number of neighbors
-        Map<Node, Integer> neighbors = new HashMap<>();
-        for(Node node: G.getAllNodes()){
-            neighbors.put(node, G.getDegree(node));
-        }
-        while (!neighbors.isEmpty()) {
-            // Zoek top met hoogste graad
-            Node popularNode = Collections.max(neighbors.entrySet(), Map.Entry.comparingByValue()).getKey();
-            bestClique.add(popularNode);
-            for (Node node: neighbors.keySet()) {
-                if (G.getNeighbours(popularNode).contains(node)) {
-                    // 1 neighbor minder
-                    neighbors.put(node,neighbors.get(node) -1);
+            // hier kunnen nog simplicial vertices van size 1 worden toegevoegd
+            //Greedy: finding minimum degree
+            if (!degrees.isEmpty()) {
+                int minDegree = ((TreeMap<Integer, List<Node>>) degrees).firstKey();
+                List<Node> possibleAdd= degrees.get(minDegree);
+                Node node;
+                if (possibleAdd.size() == 1) {
+                    node = possibleAdd.get(0);
+                    degrees.remove(minDegree);
                 } else {
-                    neighbors.remove(node);
+                    Collections.shuffle(possibleAdd);
+                    node = possibleAdd.get(0);
+                    degrees.get(minDegree).remove(node);
+                }
+                if (Vt.contains(node)) {
+                    Ct.add(node);
+                    for (Node neighbor : G.getNeighbours(node)) {
+                        phi.put(neighbor, phi.get(neighbor) + 1);
+                    }
+                    for (Node neighbor : Gct.getNeighbours(node)) {
+                        Tt.add(neighbor);
+                        Vt.remove(neighbor);
+                        Gct.removeNode(neighbor);
+                    }
+                    Vt.remove(node);
+                    Gct.removeNode(node);
                 }
             }
-            neighbors.remove(popularNode);
         }
-        return bestClique;
+        interchangeStep(G, Ct, Tt, phi);
+    }
+
+    // interchangeStep: kijkt of er door één top uit de huidige kliek te verwijderen, meerdere nieuwe toppen kunnen toegevoegd worden
+    public static void interchangeStep(UndirectedGraph G, List<Node> Ct, List<Node> Tt, Map<Node, Integer> phi) {
+        boolean swappingPossible = true;
+        while (swappingPossible) {
+            // eerst Kt construeren, dit is de verzameling toppen in Tt die slechts aan één top van Ct niet adjacent zijn
+            List<Node> Kt = new ArrayList<>();
+            for (int i = 0; i < Tt.size(); i ++) {
+                Node node = Tt.get(i);
+                if (phi.get(node) == Ct.size()) {
+                    Ct.add(node);
+                    Tt.remove(node);
+                    for (Node neighbor : G.getNeighbours(node)) {
+                        phi.put(neighbor, phi.get(neighbor) + 1);
+                    }
+                    i --;
+                } else if (phi.get(node) == Ct.size()-1) {
+                    Kt.add(node);
+                }
+            }
+            // elementen van Kt proberen uitwisselen met elementen van Ct
+            Collections.shuffle(Kt);
+            if (Kt.size() > 1) {
+                boolean swapped = false;
+                int i = 1;
+                while (!swapped && i < Kt.size()) {
+                    Node node = Kt.get(i);
+                    Node swap = null;
+                    boolean found = false;
+                    int j = 0;
+                    while (!found && j < Ct.size()) {
+                        if (!G.containsEdge(node, Ct.get(j))) {
+                            swap = Ct.get(j);
+                            found = true;
+                        }
+                        j ++;
+                    }
+                    int k =0;
+                    while (!swapped && k < i) {
+                        Node node2 = Kt.get(k);
+                        if (!G.containsEdge(node2, swap) && G.containsEdge(node, node2)) {
+                            Ct.add(node);
+                            Tt.remove(node);
+                            for (Node neighbor : G.getNeighbours(node)) {
+                                phi.put(neighbor, phi.get(neighbor) + 1);
+                            }
+                            Ct.add(node2);
+                            Tt.remove(node2);
+                            for (Node neighbor : G.getNeighbours(node2)) {
+                                phi.put(neighbor, phi.get(neighbor) + 1);
+                            }
+                            Ct.remove(swap);
+                            Tt.add(swap);
+                            for (Node neighbor : G.getNeighbours(swap)) {
+                                phi.put(neighbor, phi.get(neighbor) - 1);
+                            }
+                            swapped = true;
+                        }
+                        k ++;
+                    }
+                    i ++;
+                    if (i == Kt.size() && !swapped) {
+                        swappingPossible = false;
+                    }
+                }
+            } else {
+                swappingPossible = false;
+            }
+        }
     }
 }
