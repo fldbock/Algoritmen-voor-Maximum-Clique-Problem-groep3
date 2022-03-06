@@ -21,10 +21,12 @@ public class ELS {
             UndirectedGraph graph = rg.readGraph("DIMACSBenchmarkSet", testFile);
             long startTime = System.currentTimeMillis();
             int numNodes = effectiveLocalSearch(graph, true);
-            System.out.println(testFile + ": " + numNodes + ": " + String.valueOf(System.currentTimeMillis() - startTime));
+            System.out.println(testFile + " naive" + ": " + numNodes + ": " + String.valueOf(System.currentTimeMillis() - startTime));
+            startTime = System.currentTimeMillis();
+            numNodes = effectiveLocalSearch(graph, false);
+            System.out.println(testFile + " greedy" + ": " + numNodes + ": " + String.valueOf(System.currentTimeMillis() - startTime));
         }
     }
-
 
     public static int effectiveLocalSearch(UndirectedGraph graph1, boolean naive) {
         graph = graph1;
@@ -78,7 +80,6 @@ public class ELS {
         }
         return intersection;
     }
-
 
     private static Node add() {
         Node v = null;
