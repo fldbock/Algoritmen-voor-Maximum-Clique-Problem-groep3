@@ -5,33 +5,21 @@ import java.util.*;
 
 public class VNS {
 
-    public static void main(String[] args) {
-        ReadGraph rg = new ReadGraph();
-        List<String> testFiles = new ArrayList<>(List.of("C125.9", "C250.9","DSJC1000_5", "DSJC500_5", "C2000.5", "brock200_2", "brock200_4", "brock400_2", "brock400_4", "brock800_2", "brock800_4", "gen200_p0.9_44", "hamming10-4", "hamming8-4", "keller4", "keller5"));
-        for (int i = 0; i < testFiles.size(); i++) {
-            UndirectedGraph graph = rg.readGraph("DIMACSBenchmarkSet", testFiles.get(i));
-            long startTime = System.currentTimeMillis();
-            int beste = VNS(graph).size();
-            System.out.println(testFiles.get(i) + ": " + beste + ": " + String.valueOf(System.currentTimeMillis() - startTime));
-        }
-    }
-
     private int kmax = 5;
 
     // VNS: variable neighborhood search
     public static List<Node> VNS (UndirectedGraph G) {
         // CBC: current best clique
-        // Bij elke iteratie worden alle toppen opgedeeld in 3 verzamelingen
+        // Alle toppen worden opgedeeld in 3 verzamelingen:
         // Ct: huidige kliek
-        // Vt: huidge verzameling nog in te delen toppen
+        // Vt: nog in te delen toppen
         // Tt: huidige transversal
         // Gct: complement van deelgraaf van G voortgebracht door Vt
-        // phi: hashmap die voor elke top van G het aantal adjacente toppen in Ct weergeeft
+        // phi: houdt bij hoeveel toppen in Ct adjacent zijn aan elke top
         List<Node> CBC = new ArrayList<>();
         List<Node> Ct = new ArrayList<>();
         List<Node> Vt = G.getAllNodes();
         List<Node> Tt = new ArrayList<>();
-        // we creëren initiële Gct
         UndirectedGraph Gct = new UndirectedGraph();
         Map<Node, Integer> phi = new HashMap<>();
         for (int i = 0; i<G.getAllNodes().size(); i++) {
@@ -45,7 +33,6 @@ public class VNS {
                 }
             }
         }
-        // we zoeken een initieel lokaal optimum
         VND(G, Ct, Vt, Tt, Gct, phi);
         CBC = List.copyOf(Ct);
         int k = 1;
@@ -113,7 +100,7 @@ public class VNS {
                 }
                 degrees.remove(0);
             }
-            // hier kunnen nog simplicial vertices van size 1 worden toegevoegd
+            // hier kan nog simplicial vertex van size 1 worden toegevoegd
             //Greedy: finding minimum degree
             if (!degrees.isEmpty()) {
                 int minDegree = ((TreeMap<Integer, List<Node>>) degrees).firstKey();
@@ -145,11 +132,11 @@ public class VNS {
         interchangeStep(G, Ct, Tt, phi);
     }
 
-    // interchangeStep: kijkt of er door één top uit de huidige kliek te verwijderen, meerdere nieuwe toppen kunnen toegevoegd worden
+    //interchangeStep
     public static void interchangeStep(UndirectedGraph G, List<Node> Ct, List<Node> Tt, Map<Node, Integer> phi) {
         boolean swappingPossible = true;
         while (swappingPossible) {
-            // eerst Kt construeren, dit is de verzameling toppen in Tt die slechts aan één top van Ct niet adjacent zijn
+            // eerst Kt construeren
             List<Node> Kt = new ArrayList<>();
             for (int i = 0; i < Tt.size(); i ++) {
                 Node node = Tt.get(i);
@@ -164,7 +151,7 @@ public class VNS {
                     Kt.add(node);
                 }
             }
-            // elementen van Kt proberen uitwisselen met elementen van Ct
+            // elementen van Kt proberen uitwisselen
             Collections.shuffle(Kt);
             if (Kt.size() > 1) {
                 boolean swapped = false;
@@ -214,4 +201,71 @@ public class VNS {
             }
         }
     }
+
+
+    public static void main2(String[] args){
+        UndirectedGraph graph2 = new UndirectedGraph();
+        Node    a = graph2.addNode("1"),
+                b = graph2.addNode("2"),
+                c = graph2.addNode("3"),
+                d = graph2.addNode("4"),
+                e = graph2.addNode("5"),
+                f = graph2.addNode("6"),
+                g = graph2.addNode("7"),
+                h = graph2.addNode("8"),
+                i = graph2.addNode("9"),
+                j = graph2.addNode("10"),
+                k = graph2.addNode("11"),
+                l = graph2.addNode("12"),
+                m = graph2.addNode("13"),
+                n = graph2.addNode("14"),
+                o = graph2.addNode("15");
+        graph2.addEdge(a, b);
+        graph2.addEdge(a, c);
+        graph2.addEdge(a, d);
+        graph2.addEdge(a, e);
+        graph2.addEdge(b, c);
+        graph2.addEdge(b, d);
+        graph2.addEdge(b, e);
+        graph2.addEdge(c, d);
+        graph2.addEdge(c, e);
+        graph2.addEdge(d, e);
+        graph2.addEdge(d, f);
+        graph2.addEdge(d, g);
+        graph2.addEdge(e, f);
+        graph2.addEdge(e, g);
+        graph2.addEdge(f, g);
+        graph2.addEdge(f, h);
+        graph2.addEdge(f, i);
+        graph2.addEdge(f, j);
+        graph2.addEdge(f, k);
+        graph2.addEdge(g, l);
+        graph2.addEdge(g, m);
+        graph2.addEdge(g, n);
+        graph2.addEdge(g, o);
+        long startTime = System.currentTimeMillis();
+        List<Node> best = VNS(graph2);
+        System.out.println(best  + ": " + String.valueOf(System.currentTimeMillis()-startTime));
+    }
+
+    public static void main(String[] args) {
+        ReadGraph rg = new ReadGraph();
+        List<String> testFiles = new ArrayList<>(List.of("brock200_2","brock200_4","brock400_2","brock400_4","brock800_2","brock800_4","C125.9","C250.9","C500.9","C1000.9",/*"C2000.5","C2000.9","C4000.5",*/"DSJC500_5","DSJC1000_5","gen200_p0.9_44","gen200_p0.9_55","gen400_p0.9_55","gen400_p0.9_65","gen400_p0.9_75","hamming8-4","hamming10-4","keller4","keller5","keller6","MANN_a27","MANN_a45","MANN_a81","p_hat300-1","p_hat300-2","p_hat300-3","p_hat700-1","p_hat700-2","p_hat700-3","p_hat1500-1","p_hat1500-2","p_hat1500-3"));
+        for (int i = 0; i < testFiles.size(); i++) {
+            UndirectedGraph graph = rg.readGraph("DIMACSBenchmarkSet", testFiles.get(i));
+            long startTime = System.currentTimeMillis();
+            List<Node> beste = VNS(graph);
+            System.out.println(testFiles.get(i) + ": " + beste.size() + ": " + String.valueOf(System.currentTimeMillis() - startTime));
+            Boolean correct = true;
+            for (int j = 1; j<beste.size(); j++) {
+                for (int k = 0; k<j; k++) {
+                    if (!graph.containsEdge(beste.get(j),beste.get(k))) {
+                        correct = false;
+                    }
+                }
+            }
+            System.out.println(correct);
+        }
+    }
+
 }
