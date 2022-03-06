@@ -17,57 +17,21 @@ public class ELS {
     public static void main(String[] args) {
         ReadGraph rg = new ReadGraph();
         List<String> testFiles = new ArrayList<>(List.of("C125.9", "C250.9", "DSJC1000_5", "DSJC500_5", "C2000.5", "brock200_2", "brock200_4", "brock400_2", "brock400_4", "brock800_2", "brock800_4", "gen200_p0.9_44", "hamming10-4", "hamming8-4", "keller4", "keller5"));
-        for (int i = 0; i < testFiles.size(); i++) {
-            graph = rg.readGraph("DIMACSBenchmarkSet", testFiles.get(i));
-            /** UndirectedGraph graph2 = new UndirectedGraph();
-            * Node a = graph2.addNode("1"),
-            * b = graph2.addNode("2"),
-            * c = graph2.addNode("3"),
-            * d = graph2.addNode("4"),
-            * e = graph2.addNode("5"),
-            * f = graph2.addNode("6"),
-            * g = graph2.addNode("7"),
-            * h = graph2.addNode("8");
-            * graph2.addEdge(a, b);
-            * graph2.addEdge(a, d);
-            * graph2.addEdge(a, e);
-            * graph2.addEdge(b, c);
-            * graph2.addEdge(b, d);
-            * graph2.addEdge(b, f);
-            * graph2.addEdge(b, g);
-            * graph2.addEdge(c, d);
-            * graph2.addEdge(c, g);
-            * graph2.addEdge(c, h);
-            * graph2.addEdge(d, e);
-            * graph2.addEdge(d, f);
-            * graph2.addEdge(d, g);
-            * graph2.addEdge(d, h);
-            * graph2.addEdge(e, f);
-            * graph2.addEdge(f, g);
-            * graph2.addEdge(g, h);
-             */
-
-
-            nodes = new ArrayList<>(graph.getAllNodes());
-            cc = new ArrayList<>();
+        for (String testFile : testFiles) {
+            UndirectedGraph graph = rg.readGraph("DIMACSBenchmarkSet", testFile);
             long startTime = System.currentTimeMillis();
-
-            //Hieronder stellen we een begingraaf op met 1 top, later proberen via greedy!
-
-            Node v = nodes.get(0);
-            cc.add(v);
-            ccbest = new ArrayList<>(cc);
-
-
-            generatePAandOM();
-            int numNodes = effectiveLocalSearch();
-            System.out.println(testFiles.get(i) + ": " + numNodes + ": " + String.valueOf(System.currentTimeMillis() - startTime));
-            //}
+            int numNodes = effectiveLocalSearch(graph, true);
+            System.out.println(testFile + ": " + numNodes + ": " + String.valueOf(System.currentTimeMillis() - startTime));
         }
     }
 
 
-    public static int effectiveLocalSearch() {
+    public static int effectiveLocalSearch(UndirectedGraph graph1, boolean naive) {
+        graph = graph1;
+        nodes = new ArrayList<>(graph.getAllNodes());
+        generateClique(naive);
+        generatePAandOM();
+
         int gmax = -1;
         while (gmax != 0) {
             ArrayList<Node> ccprev = new ArrayList(cc);
@@ -76,7 +40,7 @@ public class ELS {
             int g = 0;
             gmax = 0;
             while (d.size() != 0) {
-                intersectionpap = intersection(pa, p);
+                intersectionpap = intersection(pa.keySet(), p);
                 intersectionccp = intersection(cc, p);
                 Node v = null;
                 if (intersectionpap.size() != 0) { //Add-phase
@@ -94,13 +58,9 @@ public class ELS {
                     }
                 }
                 update(v);
-                //intersectionccp = intersection(cc,p);
-                //intersectionpap = intersection(pa,p);
             }
-            // Als cc random gewijzigd wordt, moeten pa en om mee wijzigen!
             if (gmax > 0) {
                 cc = new ArrayList<>(ccbest);
-
             } else {
                 cc = new ArrayList<>(ccprev);
             }
@@ -109,7 +69,7 @@ public class ELS {
         return cc.size();
     }
 
-    private static ArrayList<Node> intersection(List<Node> list1, List<Node> list2) {
+    private static ArrayList<Node> intersection(Collection<Node> list1, Collection<Node> list2) {
         ArrayList<Node> intersection = new ArrayList<>();
         for (Node node1 : list1) {
             if (list2.contains(node1)) {
@@ -119,15 +79,6 @@ public class ELS {
         return intersection;
     }
 
-    private static ArrayList<Node> intersection(HashMap<Node, Integer> list1, ArrayList<Node> list2) {
-        ArrayList<Node> intersection = new ArrayList<>();
-        for (Node node1 : list1.keySet()) {
-            if (list2.contains(node1)) {
-                intersection.add(node1);
-            }
-        }
-        return intersection;
-    }
 
     private static Node add() {
         Node v = null;
@@ -243,5 +194,17 @@ public class ELS {
             }
             pa.put(node1, k);
         }
+    }
+
+    private static void generateClique(boolean naive) {
+        if (naive) {
+            cc = new ArrayList<Node>();
+            Node v = nodes.get(0);
+            cc.add(v);
+        } else {
+            GreedySequential gs = new GreedySequential();
+            cc=new ArrayList<Node>(gs.bestInNew(graph).getAllNodes());
+        }
+        ccbest = new ArrayList<>(cc);
     }
 }
